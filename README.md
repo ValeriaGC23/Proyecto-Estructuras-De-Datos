@@ -267,7 +267,3 @@ Cada **Evento** puede tener asociado:
 - Miguel Angel Quintero
 
 ---
-
-## Autor
-
-Proyecto académico desarrollado como práctica de **Programación Orientada a Objetos en Java**.
