@@ -261,9 +261,10 @@ Cada **Evento** puede tener asociado:
 
 ## Integrantes del grupo
 
-- Nombre integrante 1
-- Nombre integrante 2
-- Nombre integrante 3
+- Samuel Giraldo Jimenez
+- Valeria Gómez
+- Alejandro Sanchez
+- Miguel Angel Quintero
 
 ---
 
