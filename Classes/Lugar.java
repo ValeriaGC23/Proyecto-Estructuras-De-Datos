@@ -27,6 +27,9 @@ public class Lugar {
     public void setCapacidad(int capacidad) { this.capacidad = capacidad; }
     public void setTipoLugar(String tipoLugar) { this.tipoLugar = tipoLugar; }
 
+
+
+
     @Override
     public String toString() {
         return nombre + " - " + ciudad + " (" + tipoLugar + ", cap: " + capacidad + ")";
