@@ -33,7 +33,7 @@ public class Agencia {
         lugares    = new Lugar[capLugares];
     }
 
-    //  Getters de contadores y acceso por indice 
+    //Getters de contadores y acceso por indice
     public int getCantidadModelos()    { return cantidadModelos; }
     public int getCantidadFotografos() { return cantidadFotografos; }
     public int getCantidadEventos()    { return cantidadEventos; }
@@ -44,7 +44,7 @@ public class Agencia {
     public Evento    getEvento(int i)    { return eventos[i]; }
     public Lugar     getLugar(int i)     { return lugares[i]; }
 
-    //  Modelos 
+    //Modelos
     public boolean agregarModelo(Modelo m) {
         if (m == null) return false;
         if (cantidadModelos == modelos.length) modelos = crecerModelos();
@@ -75,7 +75,7 @@ public class Agencia {
         return null;
     }
 
-    //  Fotografos 
+    //Fotografos
     public boolean agregarFotografo(Fotografo f) {
         if (f == null) return false;
         if (cantidadFotografos == fotografos.length) fotografos = crecerFotografos();
@@ -106,7 +106,7 @@ public class Agencia {
         return null;
     }
 
-    //  Eventos 
+    //Eventos
     public boolean agregarEvento(Evento e) {
         if (e == null) return false;
         if (cantidadEventos == eventos.length) eventos = crecerEventos();
@@ -137,7 +137,7 @@ public class Agencia {
         return null;
     }
 
-    //  Lugares 
+    //Lugares
     public boolean agregarLugar(Lugar l) {
         if (l == null) return false;
         if (cantidadLugares == lugares.length) lugares = crecerLugares();
@@ -157,28 +157,46 @@ public class Agencia {
         return null;
     }
 
-    //  Persistencia 
+    //Persistencia
     public void guardarDatos() {
-        // Crear la carpeta "datos/" si no existe
         new File(CARPETA_DATOS).mkdirs();
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_MODELOS))) {
-            for (int i = 0; i < cantidadModelos; i++) pw.println(modelos[i].toCSV());
+            for (int i = 0; i < cantidadModelos; i++) {
+                pw.println(modelos[i].toCSV());
+                pw.println("---");
+            }
         } catch (Exception e) { System.out.println("Error guardando modelos: " + e.getMessage()); }
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_FOTOGRAFOS))) {
-            for (int i = 0; i < cantidadFotografos; i++) pw.println(fotografos[i].toCSV());
+            for (int i = 0; i < cantidadFotografos; i++) {
+                pw.println(fotografos[i].toCSV());
+                pw.println("---");
+            }
         } catch (Exception e) { System.out.println("Error guardando fotografos: " + e.getMessage()); }
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_LUGARES))) {
-            for (int i = 0; i < cantidadLugares; i++) pw.println(lugares[i].toCSV());
+            for (int i = 0; i < cantidadLugares; i++) {
+                pw.println(lugares[i].toCSV());
+                pw.println("---");
+            }
         } catch (Exception e) { System.out.println("Error guardando lugares: " + e.getMessage()); }
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_EVENTOS))) {
             for (int i = 0; i < cantidadEventos; i++) {
                 Evento ev = eventos[i];
-                if      (ev instanceof EventoPublico)  pw.println(((EventoPublico)  ev).toCSV());
-                else if (ev instanceof EventoPrivado)  pw.println(((EventoPrivado)  ev).toCSV());
+                if      (ev instanceof EventoPublico) pw.println(((EventoPublico) ev).toCSV());
+                else if (ev instanceof EventoPrivado) pw.println(((EventoPrivado) ev).toCSV());
+
+                // Guardar modelos asignados
+                for (int j = 0; j < ev.getCantidadModelos(); j++)
+                    pw.println("ASIG_MODELO," + ev.getModelo(j).getCodigoModelo());
+
+                // Guardar fotografos asignados
+                for (int j = 0; j < ev.getCantidadFotografos(); j++)
+                    pw.println("ASIG_FOTO," + ev.getFotografo(j).getIdentificacion());
+
+                pw.println("---");
             }
         } catch (Exception e) { System.out.println("Error guardando eventos: " + e.getMessage()); }
 
@@ -187,54 +205,111 @@ public class Agencia {
     }
 
     public void cargarDatos() {
-        // Orden importante: primero lugares, despues eventos (que referencian lugares)
-        cargarConScanner(ARCHIVO_MODELOS, "modelos");
-        cargarConScanner(ARCHIVO_FOTOGRAFOS, "fotografos");
-        cargarConScanner(ARCHIVO_LUGARES, "lugares");
-        cargarConScanner(ARCHIVO_EVENTOS, "eventos");
+        // Orden: primero modelos/fotografos/lugares, luego eventos (que los referencian)
+        cargarModelos();
+        cargarFotografos();
+        cargarLugares();
+        cargarEventos();
         System.out.println("Archivos cargados: " + cantidadModelos + " modelos, "
                 + cantidadFotografos + " fotografos, "
                 + cantidadLugares    + " lugares, "
                 + cantidadEventos    + " eventos.");
     }
 
-    private void cargarConScanner(String archivo, String tipo) {
+    private void cargarModelos() {
         try {
-            File f = new File(archivo);
+            File f = new File(ARCHIVO_MODELOS);
             if (!f.exists()) return;
             Scanner sc = new Scanner(f);
             while (sc.hasNextLine()) {
                 String linea = sc.nextLine().trim();
-                if (linea.isEmpty()) continue;
-                String[] p = linea.split(",");
-                switch (tipo) {
-                    case "modelos":
-                        Modelo m = Modelo.fromCSV(linea);
-                        if (m != null) agregarModelo(m);
-                        break;
-                    case "fotografos":
-                        Fotografo fo = Fotografo.fromCSV(linea);
-                        if (fo != null) agregarFotografo(fo);
-                        break;
-                    case "lugares":
-                        if (p.length >= 5)
-                            agregarLugar(new Lugar(p[0], p[1], p[2],
-                                    Integer.parseInt(p[3].trim()), p[4]));
-                        break;
-                    case "eventos":
-                        if (p.length >= 6) {
-                            java.time.LocalDate fecha = Dates.parse(p[2]);
-                            Lugar lugar = buscarLugarPorNombre(p[3]);
-                            if (p[0].equals("PUBLICO"))
-                                agregarEvento(new EventoPublico(p[1], fecha, lugar,
-                                        Integer.parseInt(p[4].trim()), p[5]));
-                            else if (p[0].equals("PRIVADO"))
-                                agregarEvento(new EventoPrivado(p[1], fecha, lugar, p[4], p[5]));
-                        }
-                        break;
+                if (!linea.isEmpty() && !linea.equals("---")) {
+                    Modelo m = Modelo.fromCSV(linea);
+                    if (m != null) agregarModelo(m);
                 }
             }
             sc.close();
-        } catch (Exception e) { System.out.println("Error cargando " + tipo + ": " + e.getMessage()); }
+        } catch (Exception e) { System.out.println("Error cargando modelos: " + e.getMessage()); }
+    }
+
+    private void cargarFotografos() {
+        try {
+            File f = new File(ARCHIVO_FOTOGRAFOS);
+            if (!f.exists()) return;
+            Scanner sc = new Scanner(f);
+            while (sc.hasNextLine()) {
+                String linea = sc.nextLine().trim();
+                if (!linea.isEmpty() && !linea.equals("---")) {
+                    Fotografo fo = Fotografo.fromCSV(linea);
+                    if (fo != null) agregarFotografo(fo);
+                }
+            }
+            sc.close();
+        } catch (Exception e) { System.out.println("Error cargando fotografos: " + e.getMessage()); }
+    }
+
+    private void cargarLugares() {
+        try {
+            File f = new File(ARCHIVO_LUGARES);
+            if (!f.exists()) return;
+            Scanner sc = new Scanner(f);
+            while (sc.hasNextLine()) {
+                String linea = sc.nextLine().trim();
+                if (!linea.isEmpty() && !linea.equals("---")) {
+                    String[] p = linea.split(",");
+                    if (p.length >= 5)
+                        agregarLugar(new Lugar(p[0], p[1], p[2],
+                                Integer.parseInt(p[3].trim()), p[4]));
+                }
+            }
+            sc.close();
+        } catch (Exception e) { System.out.println("Error cargando lugares: " + e.getMessage()); }
+    }
+
+    private void cargarEventos() {
+        try {
+            File f = new File(ARCHIVO_EVENTOS);
+            if (!f.exists()) return;
+            Scanner sc = new Scanner(f);
+            Evento eventoActual = null;
+
+            while (sc.hasNextLine()) {
+                String linea = sc.nextLine().trim();
+                if (linea.isEmpty()) continue;
+
+                if (linea.equals("---")) {
+                    // Fin del bloque del evento actual
+                    eventoActual = null;
+                    continue;
+                }
+
+                String[] p = linea.split(",");
+
+                if (p[0].equals("PUBLICO") && p.length >= 6) {
+                    java.time.LocalDate fecha = Dates.parse(p[2]);
+                    Lugar lugar = buscarLugarPorNombre(p[3]);
+                    eventoActual = new EventoPublico(p[1], fecha, lugar,
+                            Integer.parseInt(p[4].trim()), p[5]);
+                    agregarEvento(eventoActual);
+
+                } else if (p[0].equals("PRIVADO") && p.length >= 6) {
+                    java.time.LocalDate fecha = Dates.parse(p[2]);
+                    Lugar lugar = buscarLugarPorNombre(p[3]);
+                    eventoActual = new EventoPrivado(p[1], fecha, lugar, p[4], p[5]);
+                    agregarEvento(eventoActual);
+
+                } else if (p[0].equals("ASIG_MODELO") && p.length >= 2 && eventoActual != null) {
+                    // Reconstruir la asignacion buscando el modelo ya cargado
+                    Modelo m = buscarModeloPorCodigo(p[1].trim());
+                    if (m != null) eventoActual.agregarModelo(m);
+
+                } else if (p[0].equals("ASIG_FOTO") && p.length >= 2 && eventoActual != null) {
+                    // Reconstruir la asignacion buscando el fotografo ya cargado
+                    Fotografo fo = buscarFotografoPorId(p[1].trim());
+                    if (fo != null) eventoActual.agregarFotografo(fo);
+                }
+            }
+            sc.close();
+        } catch (Exception e) { System.out.println("Error cargando eventos: " + e.getMessage()); }
     }
 }

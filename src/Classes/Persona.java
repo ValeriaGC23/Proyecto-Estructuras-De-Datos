@@ -7,7 +7,7 @@ public abstract class Persona {
 
     public Persona(String nombre, String id, String contacto) {
         this.nombre = nombre;
-        this.identificacion = identificacion;
+        this.identificacion = id;
         this.contacto = contacto;
     }
 
