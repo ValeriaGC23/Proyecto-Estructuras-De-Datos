@@ -52,7 +52,7 @@ public class VentanaPrincipal extends JFrame {
     private JComboBox<String> comboTipoPersona;
     private JTextArea         areaAsignacion;
 
-    // Busca el logo probando rutas posibles (funciona en IntelliJ y en ZIP de GitHub)
+    // Busca el logo probando rutas posibles (funciona en Intellij y en .zip de GitHub)
     private ImageIcon cargarLogo(int ancho, int alto) {
         String[] rutas = {
                 "src/recursos/logo.png",
@@ -98,7 +98,7 @@ public class VentanaPrincipal extends JFrame {
         contenido.setOpaque(false);
         contenido.setBorder(BorderFactory.createEmptyBorder(45, 40, 30, 40));
 
-        // Intentamos cargar el logo real; si no existe usamos texto
+        // Intentamos cargar el logo
         JLabel lblEmoji;
         ImageIcon iconoSplash = cargarLogo(180, 130);
         if (iconoSplash != null) {
@@ -170,7 +170,7 @@ public class VentanaPrincipal extends JFrame {
         pestanas.setFont(new Font("Georgia", Font.PLAIN, 13));
         pestanas.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 
-        // Colores personalizados de pestanas (sin emojis para compatibilidad con Windows)
+        // Colores personalizados de pestanas
         UIManager.put("TabbedPane.selected",           C_TARJETA);
         UIManager.put("TabbedPane.background",         C_FONDO);
         UIManager.put("TabbedPane.foreground",         C_TEXTO_DIM);
