@@ -52,6 +52,23 @@ public class VentanaPrincipal extends JFrame {
     private JComboBox<String> comboTipoPersona;
     private JTextArea         areaAsignacion;
 
+    // Busca el logo probando rutas posibles (funciona en IntelliJ y en ZIP de GitHub)
+    private ImageIcon cargarLogo(int ancho, int alto) {
+        String[] rutas = {
+                "src/recursos/logo.png",
+                "Proyecto-Estructuras-De-Datos-main/src/recursos/logo.png"
+        };
+        for (String ruta : rutas) {
+            java.io.File f = new java.io.File(ruta);
+            if (f.exists()) {
+                Image img = new ImageIcon(f.getAbsolutePath()).getImage()
+                        .getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+                return new ImageIcon(img);
+            }
+        }
+        return null;
+    }
+
     //SPLASH SCREEN
     private void mostrarSplash() {
         JWindow splash = new JWindow();
@@ -81,24 +98,14 @@ public class VentanaPrincipal extends JFrame {
         contenido.setOpaque(false);
         contenido.setBorder(BorderFactory.createEmptyBorder(45, 40, 30, 40));
 
-        // Intentamos cargar el logo real
+        // Intentamos cargar el logo real; si no existe usamos texto
         JLabel lblEmoji;
-        java.net.URL urlLogo = getClass().getResource("/src/recursos/logo.png");
-        if (urlLogo == null) {
-            // Buscar relativo al directorio de ejecucion
-            java.io.File archivoLogo = new java.io.File("/src/recursos/logo.png");
-            if (archivoLogo.exists()) {
-                ImageIcon iconoOriginal = new ImageIcon(archivoLogo.getAbsolutePath());
-                Image imgEscalada = iconoOriginal.getImage().getScaledInstance(180, 130, Image.SCALE_SMOOTH);
-                lblEmoji = new JLabel(new ImageIcon(imgEscalada), SwingConstants.CENTER);
-            } else {
-                lblEmoji = new JLabel("", SwingConstants.CENTER);
-                lblEmoji.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
-            }
+        ImageIcon iconoSplash = cargarLogo(180, 130);
+        if (iconoSplash != null) {
+            lblEmoji = new JLabel(iconoSplash, SwingConstants.CENTER);
         } else {
-            ImageIcon iconoOriginal = new ImageIcon(urlLogo);
-            Image imgEscalada = iconoOriginal.getImage().getScaledInstance(180, 130, Image.SCALE_SMOOTH);
-            lblEmoji = new JLabel(new ImageIcon(imgEscalada), SwingConstants.CENTER);
+            lblEmoji = new JLabel("", SwingConstants.CENTER);
+            lblEmoji.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
         }
         lblEmoji.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -202,11 +209,9 @@ public class VentanaPrincipal extends JFrame {
 
         // Logo en el header
         JLabel emoji;
-        java.io.File archivoLogo = new java.io.File("src/recursos/logo.png");
-        if (archivoLogo.exists()) {
-            ImageIcon icono = new ImageIcon(archivoLogo.getAbsolutePath());
-            Image img = icono.getImage().getScaledInstance(-1, 50, Image.SCALE_SMOOTH);
-            emoji = new JLabel(new ImageIcon(img));
+        ImageIcon iconoHeader = cargarLogo(-1, 50);
+        if (iconoHeader != null) {
+            emoji = new JLabel(iconoHeader);
         } else {
             emoji = new JLabel("");
             emoji.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 28));
@@ -757,7 +762,6 @@ public class VentanaPrincipal extends JFrame {
     public static void main(String[] args) {
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext","true");
-        // Forzar renderizado de emojis en Windows sin perder el tema personalizado
         System.setProperty("java.awt.headless","false");
         SwingUtilities.invokeLater(VentanaPrincipal::new);
     }
