@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/recursos/logo.png" width="220">
+  <img src="src/recursos/logo.png" width="250">
 </p>
 
 # Agencia de Modelaje  
@@ -8,7 +8,9 @@
 ### Sistema de Gestión — Trabajo Práctico de Estructuras de Datos
 
 ---
-
+<p align="center">
+  <img src="src/recursos/introsistemav2.png" width="900">
+</p>
 ## Descripción del sistema
 
 Sistema desarrollado en **Java** con **interfaz gráfica Swing** para gestionar una agencia de modelaje.
@@ -52,7 +54,9 @@ La aplicación cuenta con una interfaz gráfica desarrollada en **Swing**, organ
 Esto permite gestionar de forma clara cada elemento del sistema.
 
 ---
-
+<p align="center">
+  <img src="src/recursos/Arquitecturav2.png" width="900">
+</p>
 ## Estructura del proyecto
 
 ```
@@ -86,7 +90,7 @@ AgenciaModelaje
 
 ---
 
-## Estructura de clases (POO)
+## Estructura de clases
 
 ```
 Persona (abstracta)
@@ -101,7 +105,9 @@ Lugar
 Agencia
 VentanaPrincipal
 ```
-
+<p align="center">
+  <img src="src/recursos/Disenov2.png" width="900">
+</p>
 ### Descripción de las clases principales
 
 **Persona (abstracta)**  
@@ -147,7 +153,9 @@ Archivos utilizados:
 Estos archivos se crean automáticamente si no existen.
 
 ---
-
+<p align="center">
+  <img src="src/recursos/Ejecucionv2.png" width="900">
+</p>
 ## Instrucciones de compilación y ejecución
 
 ### 1. Compilar el proyecto
@@ -185,7 +193,9 @@ Se permite el uso de:
 - `Scanner`
 
 ---
-
+<p align="center">
+  <img src="src/recursos/informacionv2.png" width="900">
+</p>
 ## Principios de Programación Orientada a Objetos aplicados
 
 ### Herencia
@@ -261,9 +271,8 @@ Cada **Evento** puede tener asociado:
 
 ## Integrantes del grupo
 
-- Samuel Giraldo Jimenez
-- Valeria Gómez
-- Alejandro Sanchez
-- Miguel Angel Quintero
-
+-Samuel Giraldo Jimenez
+-Valeria Gomez 
+-Alejandro Sánchez
+-Miguel Ángel Quintero
 ---
