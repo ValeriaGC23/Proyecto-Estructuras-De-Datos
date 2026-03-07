@@ -1,5 +1,4 @@
 package Classes;
-
 public class Lugar {
     private String nombre;
     private String direccion;
@@ -26,7 +25,6 @@ public class Lugar {
     public void setCiudad(String ciudad) { this.ciudad = ciudad; }
     public void setCapacidad(int capacidad) { this.capacidad = capacidad; }
     public void setTipoLugar(String tipoLugar) { this.tipoLugar = tipoLugar; }
-
 
     @Override
     public String toString() {
