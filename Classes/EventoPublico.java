@@ -18,12 +18,22 @@ public class EventoPublico extends Evento{
 
     @Override
     public String mostrarDetalles() {
-        return "";
+        // Reutilizamos baseDetalle() del padre y agregamos los campos propios
+        return baseDetalle()
+                + "Capacidad asistentes: " + capacidadAsistentes + "\n"
+                + "Patrocinador: "         + patrocinador        + "\n";
     }
 
     @Override
     public String tipoEvento() {
-        return "";
+        return "Publico";
+    }
+
+    // Para guardar en archivo plano
+    public String toCSV() {
+        return "PUBLICO," + nombreEvento + "," + Dates.format(fecha) + ","
+                + (lugar != null ? lugar.getNombre() : "SinLugar") + ","
+                + capacidadAsistentes + "," + patrocinador;
     }
 
     public int getCapacidadAsistentes() {
@@ -41,4 +51,6 @@ public class EventoPublico extends Evento{
     public void setPatrocinador(String patrocinador) {
         this.patrocinador = patrocinador;
     }
+
+
 }
