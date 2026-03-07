@@ -30,4 +30,9 @@ public class Lugar {
     public String toString() {
         return nombre + " - " + ciudad + " (" + tipoLugar + ", cap: " + capacidad + ")";
     }
+    //Guardar plano
+    public String toCSV() {
+        return nombre + "," + direccion + "," + ciudad
+                + "," + capacidad + "," + tipoLugar;
+    }
 }
