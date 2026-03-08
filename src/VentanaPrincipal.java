@@ -52,7 +52,7 @@ public class VentanaPrincipal extends JFrame {
     private JComboBox<String> comboTipoPersona;
     private JTextArea         areaAsignacion;
 
-    // Busca el logo probando rutas posibles (funciona en Intellij y en .zip de GitHub)
+    // Busca el logo probando rutas posibles (funciona en IntelliJ y en ZIP de GitHub)
     private ImageIcon cargarLogo(int ancho, int alto) {
         String[] rutas = {
                 "src/recursos/logo.png",
@@ -98,7 +98,7 @@ public class VentanaPrincipal extends JFrame {
         contenido.setOpaque(false);
         contenido.setBorder(BorderFactory.createEmptyBorder(45, 40, 30, 40));
 
-        // Intentamos cargar el logo
+        // Intentamos cargar el logo real; si no existe usamos texto
         JLabel lblEmoji;
         ImageIcon iconoSplash = cargarLogo(180, 130);
         if (iconoSplash != null) {
@@ -170,7 +170,7 @@ public class VentanaPrincipal extends JFrame {
         pestanas.setFont(new Font("Georgia", Font.PLAIN, 13));
         pestanas.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 
-        // Colores personalizados de pestanas
+        // Colores personalizados de pestanas (sin emojis para compatibilidad con Windows)
         UIManager.put("TabbedPane.selected",           C_TARJETA);
         UIManager.put("TabbedPane.background",         C_FONDO);
         UIManager.put("TabbedPane.foreground",         C_TEXTO_DIM);
@@ -404,6 +404,7 @@ public class VentanaPrincipal extends JFrame {
             String categoria=txtCategoriaModelo.getText().trim();
             boolean disp=chkDisponible.isSelected();
             if (nombre.isEmpty()||id.isEmpty()||codigo.isEmpty()) { mostrarError("Nombre, ID y Código son obligatorios."); return; }
+            if (estatura <= 0) { mostrarError("La estatura no puede ser cero ni negativa."); return; }
             if (estatura < 1.50) {
                 JOptionPane.showMessageDialog(this,
                         "No se puede registrar el modelo.\nLa estatura mínima permitida es 1.50 m.",
@@ -481,6 +482,7 @@ public class VentanaPrincipal extends JFrame {
             String contacto=txtContactoFoto.getText().trim(), esp=txtEspecialidadFoto.getText().trim();
             int anos=Integer.parseInt(txtAnosFoto.getText().trim());
             if(nombre.isEmpty()||id.isEmpty()) { mostrarError("Nombre e ID son obligatorios."); return; }
+            if(anos < 0) { mostrarError("Los años de experiencia no pueden ser negativos."); return; }
             agencia.agregarFotografo(new Fotografo(nombre,id,contacto,esp,anos));
             actualizarFotografos(); limpiarFotografo(); mostrarExito("Fotografo registrado.");
         } catch (NumberFormatException ex) { mostrarError("Los años de experiencia deben ser un número entero."); }
@@ -548,6 +550,7 @@ public class VentanaPrincipal extends JFrame {
             String ciudad=txtCiudadLugar.getText().trim(), tipo=txtTipoLugar.getText().trim();
             int cap=Integer.parseInt(txtCapacidadLugar.getText().trim());
             if(nombre.isEmpty()) { mostrarError("El nombre del lugar es obligatorio."); return; }
+            if(cap <= 0) { mostrarError("La capacidad del lugar debe ser mayor a cero."); return; }
             agencia.agregarLugar(new Lugar(nombre,dir,ciudad,cap,tipo));
             actualizarLugares(); limpiarLugar(); mostrarExito("Lugar registrado.");
         } catch (NumberFormatException ex) { mostrarError("La capacidad debe ser un número entero."); }
@@ -639,7 +642,8 @@ public class VentanaPrincipal extends JFrame {
         if(tipo.equals("Publico")) {
             try {
                 int capacidadEvento = Integer.parseInt(e1);
-                // Validar que la capacidad del evento no supere la del lugar
+                if(capacidadEvento <= 0) { mostrarError("La capacidad de asistentes debe ser mayor a cero."); return; }
+                //Validar que la capacidad del evento no supere la del lugar que ingresamos antes
                 if (lugar != null && capacidadEvento > lugar.getCapacidad()) {
                     mostrarError("La capacidad del evento (" + capacidadEvento + ") supera\n"
                             + "la capacidad máxima del lugar (" + lugar.getCapacidad() + ").");
