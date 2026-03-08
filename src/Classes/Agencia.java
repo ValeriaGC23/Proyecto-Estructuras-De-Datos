@@ -33,7 +33,7 @@ public class Agencia {
         lugares    = new Lugar[capLugares];
     }
 
-    //Getters de contadores y acceso por indice
+    // ---- Getters de contadores y acceso por indice ----
     public int getCantidadModelos()    { return cantidadModelos; }
     public int getCantidadFotografos() { return cantidadFotografos; }
     public int getCantidadEventos()    { return cantidadEventos; }
@@ -47,6 +47,11 @@ public class Agencia {
     //Modelos
     public boolean agregarModelo(Modelo m) {
         if (m == null) return false;
+        //No permitir duplicados por identificacion
+        for (int i = 0; i < cantidadModelos; i++) {
+            if (modelos[i].getIdentificacion().equalsIgnoreCase(m.getIdentificacion())) return false;
+            if (modelos[i].getCodigoModelo().equalsIgnoreCase(m.getCodigoModelo())) return false;
+        }
         if (cantidadModelos == modelos.length) modelos = crecerModelos();
         modelos[cantidadModelos++] = m;
         return true;
@@ -78,6 +83,10 @@ public class Agencia {
     //Fotografos
     public boolean agregarFotografo(Fotografo f) {
         if (f == null) return false;
+        //No permitir duplicados por identificacion
+        for (int i = 0; i < cantidadFotografos; i++) {
+            if (fotografos[i].getIdentificacion().equalsIgnoreCase(f.getIdentificacion())) return false;
+        }
         if (cantidadFotografos == fotografos.length) fotografos = crecerFotografos();
         fotografos[cantidadFotografos++] = f;
         return true;
@@ -109,6 +118,10 @@ public class Agencia {
     //Eventos
     public boolean agregarEvento(Evento e) {
         if (e == null) return false;
+        // No permitir duplicados por nombre
+        for (int i = 0; i < cantidadEventos; i++) {
+            if (eventos[i].getNombreEvento().equalsIgnoreCase(e.getNombreEvento())) return false;
+        }
         if (cantidadEventos == eventos.length) eventos = crecerEventos();
         eventos[cantidadEventos++] = e;
         return true;
@@ -140,6 +153,10 @@ public class Agencia {
     //Lugares
     public boolean agregarLugar(Lugar l) {
         if (l == null) return false;
+        //No permitir duplicados por nombre
+        for (int i = 0; i < cantidadLugares; i++) {
+            if (lugares[i].getNombre().equalsIgnoreCase(l.getNombre())) return false;
+        }
         if (cantidadLugares == lugares.length) lugares = crecerLugares();
         lugares[cantidadLugares++] = l;
         return true;
@@ -157,7 +174,7 @@ public class Agencia {
         return null;
     }
 
-    //Persistencia
+    // ---- Persistencia ----
     public void guardarDatos() {
         new File(CARPETA_DATOS).mkdirs();
 
@@ -182,17 +199,22 @@ public class Agencia {
             }
         } catch (Exception e) { System.out.println("Error guardando lugares: " + e.getMessage()); }
 
+        // Formato eventos.txt:
+        // PUBLICO,nombre,fecha,lugar,capacidad,patrocinador
+        // ASIG_MODELO,codigoModelo       modelos asignados
+        // ASIG_FOTO,idFotografo          fotografos asignados
+        // ---                            separador entre eventos
         try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_EVENTOS))) {
             for (int i = 0; i < cantidadEventos; i++) {
                 Evento ev = eventos[i];
                 if      (ev instanceof EventoPublico) pw.println(((EventoPublico) ev).toCSV());
                 else if (ev instanceof EventoPrivado) pw.println(((EventoPrivado) ev).toCSV());
 
-                // Guardar modelos asignados
+                //Guardar modelos asignados
                 for (int j = 0; j < ev.getCantidadModelos(); j++)
                     pw.println("ASIG_MODELO," + ev.getModelo(j).getCodigoModelo());
 
-                // Guardar fotografos asignados
+                //Guardar fotografos asignados
                 for (int j = 0; j < ev.getCantidadFotografos(); j++)
                     pw.println("ASIG_FOTO," + ev.getFotografo(j).getIdentificacion());
 
@@ -205,7 +227,7 @@ public class Agencia {
     }
 
     public void cargarDatos() {
-        // Orden: primero modelos/fotografos/lugares, luego eventos (que los referencian)
+        //modelos/fotografos/lugares, luego eventos (que los referencian)
         cargarModelos();
         cargarFotografos();
         cargarLugares();
@@ -278,13 +300,12 @@ public class Agencia {
                 if (linea.isEmpty()) continue;
 
                 if (linea.equals("---")) {
-                    // Fin del bloque del evento actual
+                    //Fin del bloque del evento actual
                     eventoActual = null;
                     continue;
                 }
 
                 String[] p = linea.split(",");
-
                 if (p[0].equals("PUBLICO") && p.length >= 6) {
                     java.time.LocalDate fecha = Dates.parse(p[2]);
                     Lugar lugar = buscarLugarPorNombre(p[3]);
@@ -299,12 +320,12 @@ public class Agencia {
                     agregarEvento(eventoActual);
 
                 } else if (p[0].equals("ASIG_MODELO") && p.length >= 2 && eventoActual != null) {
-                    // Reconstruir la asignacion buscando el modelo ya cargado
+                    //Reconstruir la asignacion buscando el modelo ya cargado
                     Modelo m = buscarModeloPorCodigo(p[1].trim());
                     if (m != null) eventoActual.agregarModelo(m);
 
                 } else if (p[0].equals("ASIG_FOTO") && p.length >= 2 && eventoActual != null) {
-                    // Reconstruir la asignacion buscando el fotografo ya cargado
+                    //Reconstruir la asignacion buscando el fotografo ya cargado
                     Fotografo fo = buscarFotografoPorId(p[1].trim());
                     if (fo != null) eventoActual.agregarFotografo(fo);
                 }

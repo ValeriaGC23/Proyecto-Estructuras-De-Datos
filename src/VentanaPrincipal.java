@@ -405,12 +405,14 @@ public class VentanaPrincipal extends JFrame {
             boolean disp=chkDisponible.isSelected();
             if (nombre.isEmpty()||id.isEmpty()||codigo.isEmpty()) { mostrarError("Nombre, ID y Código son obligatorios."); return; }
             if (estatura <= 0) { mostrarError("La estatura no puede ser cero ni negativa."); return; }
+            if (estatura > 2.50) { mostrarError("La estatura no puede superar 2.50 m."); return; }
             if (estatura < 1.50) {
                 JOptionPane.showMessageDialog(this,
                         "No se puede registrar el modelo.\nLa estatura mínima permitida es 1.50 m.",
                         "No más enanos por favor", JOptionPane.WARNING_MESSAGE); return;
             }
-            agencia.agregarModelo(new Modelo(nombre,id,contacto,codigo,estatura,categoria,disp));
+            boolean ok = agencia.agregarModelo(new Modelo(nombre,id,contacto,codigo,estatura,categoria,disp));
+            if (!ok) { mostrarError("Ya existe una modelo con ese ID o código."); return; }
             actualizarModelos(); limpiarModelo(); mostrarExito("Modelo registrado.");
         } catch (NumberFormatException ex) { mostrarError("La estatura debe ser un número. Ejemplo: 1.75"); }
     }
@@ -483,7 +485,8 @@ public class VentanaPrincipal extends JFrame {
             int anos=Integer.parseInt(txtAnosFoto.getText().trim());
             if(nombre.isEmpty()||id.isEmpty()) { mostrarError("Nombre e ID son obligatorios."); return; }
             if(anos < 0) { mostrarError("Los años de experiencia no pueden ser negativos."); return; }
-            agencia.agregarFotografo(new Fotografo(nombre,id,contacto,esp,anos));
+            boolean ok = agencia.agregarFotografo(new Fotografo(nombre,id,contacto,esp,anos));
+            if (!ok) { mostrarError("Ya existe un fotógrafo con ese ID."); return; }
             actualizarFotografos(); limpiarFotografo(); mostrarExito("Fotografo registrado.");
         } catch (NumberFormatException ex) { mostrarError("Los años de experiencia deben ser un número entero."); }
     }
@@ -551,7 +554,8 @@ public class VentanaPrincipal extends JFrame {
             int cap=Integer.parseInt(txtCapacidadLugar.getText().trim());
             if(nombre.isEmpty()) { mostrarError("El nombre del lugar es obligatorio."); return; }
             if(cap <= 0) { mostrarError("La capacidad del lugar debe ser mayor a cero."); return; }
-            agencia.agregarLugar(new Lugar(nombre,dir,ciudad,cap,tipo));
+            boolean ok = agencia.agregarLugar(new Lugar(nombre,dir,ciudad,cap,tipo));
+            if (!ok) { mostrarError("Ya existe un lugar con ese nombre."); return; }
             actualizarLugares(); limpiarLugar(); mostrarExito("Lugar registrado.");
         } catch (NumberFormatException ex) { mostrarError("La capacidad debe ser un número entero."); }
     }
@@ -632,28 +636,33 @@ public class VentanaPrincipal extends JFrame {
         String e1=txtExtra1.getText().trim(), e2=txtExtra2.getText().trim();
         String tipo=(String)comboTipoEvento.getSelectedItem();
         if(nombre.isEmpty()) { mostrarError("El nombre del evento es obligatorio."); return; }
+        // No permitir nombre duplicado
+        if(agencia.buscarEventoPorNombre(nombre) != null) { mostrarError("Ya existe un evento con ese nombre."); return; }
         LocalDate fecha=Dates.construir((int)spDia.getValue(),(int)spMes.getValue(),(int)spAnio.getValue());
         if(fecha==null) { mostrarError("La fecha ingresada no es válida."); return; }
-        Lugar lugar=null;
-        if(!nomL.isEmpty()) {
-            lugar=agencia.buscarLugarPorNombre(nomL);
-            if(lugar==null) { mostrarError("Lugar '"+nomL+"' no encontrado.\nRegístrelo primero en Lugares."); return; }
-        }
+        // No permitir fechas en el pasado
+        if(fecha.isBefore(LocalDate.now())) { mostrarError("La fecha del evento no puede ser en el pasado."); return; }
+        // Lugar obligatorio
+        if(nomL.isEmpty()) { mostrarError("El lugar del evento es obligatorio."); return; }
+        Lugar lugar=agencia.buscarLugarPorNombre(nomL);
+        if(lugar==null) { mostrarError("Lugar '"+nomL+"' no encontrado.\nRegístrelo primero en Lugares."); return; }
         if(tipo.equals("Publico")) {
             try {
                 int capacidadEvento = Integer.parseInt(e1);
                 if(capacidadEvento <= 0) { mostrarError("La capacidad de asistentes debe ser mayor a cero."); return; }
-                //Validar que la capacidad del evento no supere la del lugar que ingresamos antes
-                if (lugar != null && capacidadEvento > lugar.getCapacidad()) {
+                // Validar que la capacidad del evento no supere la del lugar
+                if (capacidadEvento > lugar.getCapacidad()) {
                     mostrarError("La capacidad del evento (" + capacidadEvento + ") supera\n"
                             + "la capacidad máxima del lugar (" + lugar.getCapacidad() + ").");
                     return;
                 }
-                agencia.agregarEvento(new EventoPublico(nombre,fecha,lugar,capacidadEvento,e2));
+                boolean ok = agencia.agregarEvento(new EventoPublico(nombre,fecha,lugar,capacidadEvento,e2));
+                if(!ok) { mostrarError("No se pudo crear el evento."); return; }
                 mostrarExito("Evento Publico creado.");
             } catch(NumberFormatException ex) { mostrarError("La capacidad debe ser un número entero."); return; }
         } else {
-            agencia.agregarEvento(new EventoPrivado(nombre,fecha,lugar,e1,e2));
+            boolean ok = agencia.agregarEvento(new EventoPrivado(nombre,fecha,lugar,e1,e2));
+            if(!ok) { mostrarError("No se pudo crear el evento."); return; }
             mostrarExito("Evento Privado creado.");
         }
         actualizarEventos(); limpiarEvento();
@@ -740,7 +749,7 @@ public class VentanaPrincipal extends JFrame {
             if(ok) mostrarExito("Fotógrafo '"+f.getNombre()+"' asignado.");
             else   mostrarError("El fotógrafo ya estaba asignado.");
         }
-        actualizarEventos(); // Actualiza conteo en pestaña Eventos
+        actualizarEventos(); //Actualiza conteo en pestaña Eventos
         verDetalles();
     }
 
