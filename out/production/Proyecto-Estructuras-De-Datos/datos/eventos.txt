@@ -1,0 +1,7 @@
+PUBLICO,Pasarela Venezuela,08/03/2026,Hotel Poblado,2700,Rappi
+ASIG_MODELO,1
+ASIG_FOTO,1
+---
+PUBLICO,Pasarela 2,13/03/2026,Hotel Poblado,300,Uber
+ASIG_MODELO,1
+---

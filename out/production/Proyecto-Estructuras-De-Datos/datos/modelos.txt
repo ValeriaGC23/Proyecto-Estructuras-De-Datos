@@ -1,0 +1,4 @@
+Nicolás Maduro,0972804731,209481282,1,1.72,Venezolano,true
+---
+El coste,9712649264,8129469263,2,1.5,Cagón,true
+---
