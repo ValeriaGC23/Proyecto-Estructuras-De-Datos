@@ -21,6 +21,7 @@ public class Modelo extends Persona {
     public String  getCategoria()    { return categoria; }
     public boolean isDisponible()    { return disponible; }
 
+
     public void setDisponible(boolean disponible) { this.disponible = disponible; }
     public void setCategoria(String categoria)    { this.categoria  = categoria; }
 
@@ -28,7 +29,7 @@ public class Modelo extends Persona {
     public void mostrarInformacion() {
         System.out.println("=== MODELO ===");
         System.out.println("Nombre: "    + nombre);
-        System.out.println("ID: "        + identificacion);
+        System.out.println("ID: "        + id);
         System.out.println("Contacto: "  + contacto);
         System.out.println("Codigo: "    + codigoModelo);
         System.out.println("Estatura: "  + estatura + " m");
@@ -44,7 +45,7 @@ public class Modelo extends Persona {
 
     // Para guardar en archivo plano
     public String toCSV() {
-        return nombre + "," + identificacion + "," + contacto + ","
+        return nombre + "," + id + "," + contacto + ","
                 + codigoModelo + "," + estatura + "," + categoria + "," + disponible;
     }
 

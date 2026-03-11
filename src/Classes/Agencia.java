@@ -1,9 +1,10 @@
 package src.Classes;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.util.Scanner;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
 
 // Clase principal del sistema
 // Gestiona modelos, fotografos, eventos y lugares usando arreglos
@@ -21,10 +22,10 @@ public class Agencia {
 
     // Los archivos se guardan en la carpeta "datos/" dentro del proyecto
     private static final String CARPETA_DATOS      = "datos/";
-    private static final String ARCHIVO_MODELOS    = CARPETA_DATOS + "modelos.txt";
-    private static final String ARCHIVO_FOTOGRAFOS = CARPETA_DATOS + "fotografos.txt";
-    private static final String ARCHIVO_EVENTOS    = CARPETA_DATOS + "eventos.txt";
-    private static final String ARCHIVO_LUGARES    = CARPETA_DATOS + "lugares.txt";
+    private static final String ARCHIVO_MODELOS    = CARPETA_DATOS + "modelos.dat";
+    private static final String ARCHIVO_FOTOGRAFOS = CARPETA_DATOS + "fotografos.dat";
+    private static final String ARCHIVO_EVENTOS    = CARPETA_DATOS + "eventos.dat";
+    private static final String ARCHIVO_LUGARES    = CARPETA_DATOS + "lugares.dat";
 
     public Agencia(int capModelos, int capFotografos, int capEventos, int capLugares) {
         modelos    = new Modelo[capModelos];
@@ -33,7 +34,7 @@ public class Agencia {
         lugares    = new Lugar[capLugares];
     }
 
-    // ---- Getters de contadores y acceso por indice ----
+    // Getters de contadores y acceso por indice 
     public int getCantidadModelos()    { return cantidadModelos; }
     public int getCantidadFotografos() { return cantidadFotografos; }
     public int getCantidadEventos()    { return cantidadEventos; }
@@ -44,10 +45,10 @@ public class Agencia {
     public Evento    getEvento(int i)    { return eventos[i]; }
     public Lugar     getLugar(int i)     { return lugares[i]; }
 
-    //Modelos
+    // Modelos 
     public boolean agregarModelo(Modelo m) {
         if (m == null) return false;
-        //No permitir duplicados por identificacion
+        // No permitir duplicados por identificacion o por codigo
         for (int i = 0; i < cantidadModelos; i++) {
             if (modelos[i].getIdentificacion().equalsIgnoreCase(m.getIdentificacion())) return false;
             if (modelos[i].getCodigoModelo().equalsIgnoreCase(m.getCodigoModelo())) return false;
@@ -80,10 +81,10 @@ public class Agencia {
         return null;
     }
 
-    //Fotografos
+    // Fotografos 
     public boolean agregarFotografo(Fotografo f) {
         if (f == null) return false;
-        //No permitir duplicados por identificacion
+        // No permitir duplicados por identificacion
         for (int i = 0; i < cantidadFotografos; i++) {
             if (fotografos[i].getIdentificacion().equalsIgnoreCase(f.getIdentificacion())) return false;
         }
@@ -115,7 +116,7 @@ public class Agencia {
         return null;
     }
 
-    //Eventos
+    // Eventos 
     public boolean agregarEvento(Evento e) {
         if (e == null) return false;
         // No permitir duplicados por nombre
@@ -150,10 +151,10 @@ public class Agencia {
         return null;
     }
 
-    //Lugares
+    // Lugares 
     public boolean agregarLugar(Lugar l) {
         if (l == null) return false;
-        //No permitir duplicados por nombre
+        // No permitir duplicados por nombre
         for (int i = 0; i < cantidadLugares; i++) {
             if (lugares[i].getNombre().equalsIgnoreCase(l.getNombre())) return false;
         }
@@ -174,163 +175,100 @@ public class Agencia {
         return null;
     }
 
-    // ---- Persistencia ----
+    // Persistencia con Serializable 
+    // Cada arreglo se guarda en su propio archivo usando ObjectOutputStream.
+    // Los objetos deben implementar Serializable para poder ser serializados.
+
     public void guardarDatos() {
         new File(CARPETA_DATOS).mkdirs();
 
-        try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_MODELOS))) {
+        //GUARDAR MODELOS
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new FileOutputStream(ARCHIVO_MODELOS))) {
+            // Primero escribimos cuantos hay, luego cada objeto
+            oos.writeInt(cantidadModelos);
             for (int i = 0; i < cantidadModelos; i++) {
-                pw.println(modelos[i].toCSV());
-                pw.println("---");
+                oos.writeObject(modelos[i]);
             }
         } catch (Exception e) { System.out.println("Error guardando modelos: " + e.getMessage()); }
 
-        try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_FOTOGRAFOS))) {
+        //GUARDAR FOTOGRAFOS
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new FileOutputStream(ARCHIVO_FOTOGRAFOS))) {
+            oos.writeInt(cantidadFotografos);
             for (int i = 0; i < cantidadFotografos; i++) {
-                pw.println(fotografos[i].toCSV());
-                pw.println("---");
+                oos.writeObject(fotografos[i]);
             }
         } catch (Exception e) { System.out.println("Error guardando fotografos: " + e.getMessage()); }
 
-        try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_LUGARES))) {
+        //GUARDAR LUGARES
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new FileOutputStream(ARCHIVO_LUGARES))) {
+            oos.writeInt(cantidadLugares);
             for (int i = 0; i < cantidadLugares; i++) {
-                pw.println(lugares[i].toCSV());
-                pw.println("---");
+                oos.writeObject(lugares[i]);
             }
         } catch (Exception e) { System.out.println("Error guardando lugares: " + e.getMessage()); }
 
-        // Formato eventos.txt:
-        // PUBLICO,nombre,fecha,lugar,capacidad,patrocinador
-        // ASIG_MODELO,codigoModelo       modelos asignados
-        // ASIG_FOTO,idFotografo          fotografos asignados
-        // ---                            separador entre eventos
-        try (PrintWriter pw = new PrintWriter(new FileWriter(ARCHIVO_EVENTOS))) {
+        //GUARDAR EVENTOS (incluye modelos y fotografos asignados dentro del objeto)
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new FileOutputStream(ARCHIVO_EVENTOS))) {
+            oos.writeInt(cantidadEventos);
             for (int i = 0; i < cantidadEventos; i++) {
-                Evento ev = eventos[i];
-                if      (ev instanceof EventoPublico) pw.println(((EventoPublico) ev).toCSV());
-                else if (ev instanceof EventoPrivado) pw.println(((EventoPrivado) ev).toCSV());
-
-                //Guardar modelos asignados
-                for (int j = 0; j < ev.getCantidadModelos(); j++)
-                    pw.println("ASIG_MODELO," + ev.getModelo(j).getCodigoModelo());
-
-                //Guardar fotografos asignados
-                for (int j = 0; j < ev.getCantidadFotografos(); j++)
-                    pw.println("ASIG_FOTO," + ev.getFotografo(j).getIdentificacion());
-
-                pw.println("---");
+                oos.writeObject(eventos[i]);
             }
         } catch (Exception e) { System.out.println("Error guardando eventos: " + e.getMessage()); }
 
-        System.out.println("Archivos guardados: " + ARCHIVO_MODELOS + ", " + ARCHIVO_FOTOGRAFOS
-                + ", " + ARCHIVO_LUGARES + ", " + ARCHIVO_EVENTOS);
-    }
-
-    public void cargarDatos() {
-        //modelos/fotografos/lugares, luego eventos (que los referencian)
-        cargarModelos();
-        cargarFotografos();
-        cargarLugares();
-        cargarEventos();
-        System.out.println("Archivos cargados: " + cantidadModelos + " modelos, "
+        System.out.println("Datos serializados: " + cantidadModelos + " modelos, "
                 + cantidadFotografos + " fotografos, "
                 + cantidadLugares    + " lugares, "
                 + cantidadEventos    + " eventos.");
     }
 
-    private void cargarModelos() {
-        try {
-            File f = new File(ARCHIVO_MODELOS);
-            if (!f.exists()) return;
-            Scanner sc = new Scanner(f);
-            while (sc.hasNextLine()) {
-                String linea = sc.nextLine().trim();
-                if (!linea.isEmpty() && !linea.equals("---")) {
-                    Modelo m = Modelo.fromCSV(linea);
-                    if (m != null) agregarModelo(m);
-                }
+    public void cargarDatos() {
+        //CARGAR MODELOS
+        try (ObjectInputStream ois = new ObjectInputStream(
+                new FileInputStream(ARCHIVO_MODELOS))) {
+            int cantidad = ois.readInt();
+            for (int i = 0; i < cantidad; i++) {
+                Modelo m = (Modelo) ois.readObject();
+                agregarModelo(m);
             }
-            sc.close();
-        } catch (Exception e) { System.out.println("Error cargando modelos: " + e.getMessage()); }
-    }
+        } catch (Exception e) { System.out.println("No se encontraron modelos guardados."); }
 
-    private void cargarFotografos() {
-        try {
-            File f = new File(ARCHIVO_FOTOGRAFOS);
-            if (!f.exists()) return;
-            Scanner sc = new Scanner(f);
-            while (sc.hasNextLine()) {
-                String linea = sc.nextLine().trim();
-                if (!linea.isEmpty() && !linea.equals("---")) {
-                    Fotografo fo = Fotografo.fromCSV(linea);
-                    if (fo != null) agregarFotografo(fo);
-                }
+        //CARGAR FOTOGRAFOS
+        try (ObjectInputStream ois = new ObjectInputStream(
+                new FileInputStream(ARCHIVO_FOTOGRAFOS))) {
+            int cantidad = ois.readInt();
+            for (int i = 0; i < cantidad; i++) {
+                Fotografo f = (Fotografo) ois.readObject();
+                agregarFotografo(f);
             }
-            sc.close();
-        } catch (Exception e) { System.out.println("Error cargando fotografos: " + e.getMessage()); }
-    }
+        } catch (Exception e) { System.out.println("No se encontraron fotografos guardados."); }
 
-    private void cargarLugares() {
-        try {
-            File f = new File(ARCHIVO_LUGARES);
-            if (!f.exists()) return;
-            Scanner sc = new Scanner(f);
-            while (sc.hasNextLine()) {
-                String linea = sc.nextLine().trim();
-                if (!linea.isEmpty() && !linea.equals("---")) {
-                    String[] p = linea.split(",");
-                    if (p.length >= 5)
-                        agregarLugar(new Lugar(p[0], p[1], p[2],
-                                Integer.parseInt(p[3].trim()), p[4]));
-                }
+        //CARGAR LUGARES
+        try (ObjectInputStream ois = new ObjectInputStream(
+                new FileInputStream(ARCHIVO_LUGARES))) {
+            int cantidad = ois.readInt();
+            for (int i = 0; i < cantidad; i++) {
+                Lugar l = (Lugar) ois.readObject();
+                agregarLugar(l);
             }
-            sc.close();
-        } catch (Exception e) { System.out.println("Error cargando lugares: " + e.getMessage()); }
-    }
+        } catch (Exception e) { System.out.println("No se encontraron lugares guardados."); }
 
-    private void cargarEventos() {
-        try {
-            File f = new File(ARCHIVO_EVENTOS);
-            if (!f.exists()) return;
-            Scanner sc = new Scanner(f);
-            Evento eventoActual = null;
-
-            while (sc.hasNextLine()) {
-                String linea = sc.nextLine().trim();
-                if (linea.isEmpty()) continue;
-
-                if (linea.equals("---")) {
-                    //Fin del bloque del evento actual
-                    eventoActual = null;
-                    continue;
-                }
-
-                String[] p = linea.split(",");
-                if (p[0].equals("PUBLICO") && p.length >= 6) {
-                    java.time.LocalDate fecha = Dates.parse(p[2]);
-                    Lugar lugar = buscarLugarPorNombre(p[3]);
-                    eventoActual = new EventoPublico(p[1], fecha, lugar,
-                            Integer.parseInt(p[4].trim()), p[5]);
-                    agregarEvento(eventoActual);
-
-                } else if (p[0].equals("PRIVADO") && p.length >= 6) {
-                    java.time.LocalDate fecha = Dates.parse(p[2]);
-                    Lugar lugar = buscarLugarPorNombre(p[3]);
-                    eventoActual = new EventoPrivado(p[1], fecha, lugar, p[4], p[5]);
-                    agregarEvento(eventoActual);
-
-                } else if (p[0].equals("ASIG_MODELO") && p.length >= 2 && eventoActual != null) {
-                    //Reconstruir la asignacion buscando el modelo ya cargado
-                    Modelo m = buscarModeloPorCodigo(p[1].trim());
-                    if (m != null) eventoActual.agregarModelo(m);
-
-                } else if (p[0].equals("ASIG_FOTO") && p.length >= 2 && eventoActual != null) {
-                    //Reconstruir la asignacion buscando el fotografo ya cargado
-                    Fotografo fo = buscarFotografoPorId(p[1].trim());
-                    if (fo != null) eventoActual.agregarFotografo(fo);
-                }
+        //CARGAR EVENTOS (ya traen sus modelos y fotografos asignados dentro del objeto)
+        try (ObjectInputStream ois = new ObjectInputStream(
+                new FileInputStream(ARCHIVO_EVENTOS))) {
+            int cantidad = ois.readInt();
+            for (int i = 0; i < cantidad; i++) {
+                Evento ev = (Evento) ois.readObject();
+                agregarEvento(ev);
             }
-            sc.close();
-        } catch (Exception e) { System.out.println("Error cargando eventos: " + e.getMessage()); }
+        } catch (Exception e) { System.out.println("No se encontraron eventos guardados."); }
+
+        System.out.println("Datos cargados: " + cantidadModelos + " modelos, "
+                + cantidadFotografos + " fotografos, "
+                + cantidadLugares    + " lugares, "
+                + cantidadEventos    + " eventos.");
     }
 }

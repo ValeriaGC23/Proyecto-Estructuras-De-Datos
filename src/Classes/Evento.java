@@ -1,112 +1,105 @@
 package src.Classes;
+import java.io.Serializable;
 
-import java.time.LocalDate;
+// Clase abstracta Evento
+// Es la clase base para EventoPublico y EventoPrivado
+// Usa arreglos para guardar modelos y fotografos (no se permite ArrayList)
+public abstract class Evento implements Serializable {
 
-public abstract class Evento {
+    private static final long serialVersionUID = 4L;
+
     protected String nombreEvento;
-    protected LocalDate fecha;
+    protected String fecha;           // Guardamos la fecha como String para simplificar
     protected Lugar lugar;
-
     protected Modelo[] modelosParticipantes;
-    protected int modelosCount;
-
     protected Fotografo[] fotografosAsignados;
-    protected int fotografosCount;
 
-    protected Evento(String nombreEvento, LocalDate fecha, Lugar lugar) {
+    // Contadores para saber cuantos hay actualmente en el arreglo
+    protected int cantidadModelos;
+    protected int cantidadFotografos;
+
+    // Tamano maximo de los arreglos
+    private static final int MAX_MODELOS = 50;
+    private static final int MAX_FOTOGRAFOS = 20;
+
+    // Constructor de Evento
+    public Evento(String nombreEvento, String fecha, Lugar lugar) {
         this.nombreEvento = nombreEvento;
         this.fecha = fecha;
         this.lugar = lugar;
 
-        this.modelosParticipantes = new Modelo[10];
-        this.fotografosAsignados = new Fotografo[10];
-        this.modelosCount = 0;
-        this.fotografosCount = 0;
+        // Inicializamos los arreglos con tamano maximo
+        this.modelosParticipantes = new Modelo[MAX_MODELOS];
+        this.fotografosAsignados = new Fotografo[MAX_FOTOGRAFOS];
+        this.cantidadModelos = 0;
+        this.cantidadFotografos = 0;
     }
 
-    public String getNombreEvento() { return nombreEvento; }
-    public LocalDate getFecha() { return fecha; }
-    public Lugar getLugar() { return lugar; }
-
-    public void setLugar(Lugar lugar) { this.lugar = lugar; }
-
-    public int getCantidadModelos() { return modelosCount; }
-    public int getCantidadFotografos() { return fotografosCount; }
-
-    public Modelo getModelo(int i) {
-        if (i < 0 || i >= modelosCount) return null;
-        return modelosParticipantes[i];
+    // Getters
+    public String getNombreEvento() {
+        return nombreEvento;
     }
 
-    public Fotografo getFotografo(int i) {
-        if (i < 0 || i >= fotografosCount) return null;
-        return fotografosAsignados[i];
+    public String getFecha() {
+        return fecha;
     }
 
-    public boolean agregarModelo(Modelo m) {
-        if (m == null) return false;
-        // evitar duplicados por código
-        for (int i = 0; i < modelosCount; i++) {
-            if (modelosParticipantes[i] != null &&
-                    modelosParticipantes[i].getCodigoModelo().equalsIgnoreCase(m.getCodigoModelo())) {
-                return false;
-            }
+    public Lugar getLugar() {
+        return lugar;
+    }
+
+    public Modelo[] getModelosParticipantes() {
+        return modelosParticipantes;
+    }
+
+    public Fotografo[] getFotografosAsignados() {
+        return fotografosAsignados;
+    }
+
+    public int getCantidadModelos() {
+        return cantidadModelos;
+    }
+
+    public int getCantidadFotografos() {
+        return cantidadFotografos;
+    }
+
+    // Setters
+    public void setNombreEvento(String nombreEvento) {
+        this.nombreEvento = nombreEvento;
+    }
+
+    public void setFecha(String fecha) {
+        this.fecha = fecha;
+    }
+
+    public void setLugar(Lugar lugar) {
+        this.lugar = lugar;
+    }
+
+    // Metodo para agregar un modelo al evento
+    public void agregarModeloParticipante(Modelo modelo) {
+        if (cantidadModelos < modelosParticipantes.length) {
+            modelosParticipantes[cantidadModelos] = modelo;
+            cantidadModelos++;
+        } else {
+            System.out.println("No se pueden agregar mas modelos al evento.");
         }
-        ensureModelosCapacity(modelosCount + 1);
-        modelosParticipantes[modelosCount] = m;
-        modelosCount++;
-        return true;
     }
 
-    public boolean agregarFotografo(Fotografo f) {
-        if (f == null) return false;
-        // evitar duplicados por id
-        for (int i = 0; i < fotografosCount; i++) {
-            if (fotografosAsignados[i] != null &&
-                    fotografosAsignados[i].getIdentificacion().equalsIgnoreCase(f.getIdentificacion())) {
-                return false;
-            }
+    // Metodo para agregar un fotografo al evento
+    public void agregarFotografoAsignado(Fotografo fotografo) {
+        if (cantidadFotografos < fotografosAsignados.length) {
+            fotografosAsignados[cantidadFotografos] = fotografo;
+            cantidadFotografos++;
+        } else {
+            System.out.println("No se pueden agregar mas fotografos al evento.");
         }
-        ensureFotografosCapacity(fotografosCount + 1);
-        fotografosAsignados[fotografosCount] = f;
-        fotografosCount++;
-        return true;
     }
 
-    private void ensureModelosCapacity(int needed) {
-        if (needed <= modelosParticipantes.length) return;
-        int newCap = modelosParticipantes.length * 2;
-        if (newCap < needed) newCap = needed;
-        Modelo[] nuevo = new Modelo[newCap];
-        for (int i = 0; i < modelosCount; i++) nuevo[i] = modelosParticipantes[i];
-        modelosParticipantes = nuevo;
-    }
+    // Metodo abstracto: cada subclase lo implementa
+    public abstract void mostrarDetalles();
 
-    private void ensureFotografosCapacity(int needed) {
-        if (needed <= fotografosAsignados.length) return;
-        int newCap = fotografosAsignados.length * 2;
-        if (newCap < needed) newCap = needed;
-        Fotografo[] nuevo = new Fotografo[newCap];
-        for (int i = 0; i < fotografosCount; i++) nuevo[i] = fotografosAsignados[i];
-        fotografosAsignados = nuevo;
-    }
-
-    public abstract String mostrarDetalles();
+    // Metodo abstracto: devuelve el tipo de evento
     public abstract String tipoEvento();
-
-    protected String baseDetalle() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Evento ").append(tipoEvento()).append(": ").append(nombreEvento).append("\n");
-        sb.append("Fecha: ").append(Dates.format(fecha)).append("\n");
-        sb.append("Lugar: ").append(lugar == null ? "N/A" : lugar.toString()).append("\n");
-        sb.append("Modelos (").append(modelosCount).append("):\n");
-        for (int i = 0; i < modelosCount; i++) {
-            sb.append(" - ").append(modelosParticipantes[i].toString()).append("\n");
-        }
-        sb.append("Fotógrafos (").append(fotografosCount).append("):\n");
-        for (int i = 0; i < fotografosCount; i++) {
-            sb.append(" - ").append(fotografosAsignados[i].toString()).append("\n");
-        }
-        return sb.toString();
-    }
 }

@@ -98,7 +98,7 @@ public class VentanaPrincipal extends JFrame {
         contenido.setOpaque(false);
         contenido.setBorder(BorderFactory.createEmptyBorder(45, 40, 30, 40));
 
-        // Intentamos cargar el logo real
+        // Intentamos cargar el logo real; si no existe usamos texto
         JLabel lblEmoji;
         ImageIcon iconoSplash = cargarLogo(180, 130);
         if (iconoSplash != null) {
@@ -638,10 +638,13 @@ public class VentanaPrincipal extends JFrame {
         if(nombre.isEmpty()) { mostrarError("El nombre del evento es obligatorio."); return; }
         // No permitir nombre duplicado
         if(agencia.buscarEventoPorNombre(nombre) != null) { mostrarError("Ya existe un evento con ese nombre."); return; }
-        LocalDate fecha=Dates.construir((int)spDia.getValue(),(int)spMes.getValue(),(int)spAnio.getValue());
-        if(fecha==null) { mostrarError("La fecha ingresada no es válida."); return; }
+        // Construir fecha como LocalDate solo para validar, luego convertir a String
+        LocalDate fechaLD=Dates.construir((int)spDia.getValue(),(int)spMes.getValue(),(int)spAnio.getValue());
+        if(fechaLD==null) { mostrarError("La fecha ingresada no es válida."); return; }
         // No permitir fechas en el pasado
-        if(fecha.isBefore(LocalDate.now())) { mostrarError("La fecha del evento no puede ser en el pasado."); return; }
+        if(fechaLD.isBefore(LocalDate.now())) { mostrarError("La fecha del evento no puede ser en el pasado."); return; }
+        // Convertir a String para los constructores del estudiante
+        String fecha = Dates.format(fechaLD);
         // Lugar obligatorio
         if(nomL.isEmpty()) { mostrarError("El lugar del evento es obligatorio."); return; }
         Lugar lugar=agencia.buscarLugarPorNombre(nomL);
@@ -682,7 +685,7 @@ public class VentanaPrincipal extends JFrame {
             Evento ev=agencia.getEvento(i);
             String nl=ev.getLugar()!=null?ev.getLugar().getNombre():"—";
             modeloTablaEventos.addRow(new Object[]{
-                    ev.getNombreEvento(), Dates.format(ev.getFecha()), nl,
+                    ev.getNombreEvento(), ev.getFecha(), nl,
                     ev.tipoEvento().equals("Publico")?"Publico":"Privado",
                     ev.getCantidadModelos(), ev.getCantidadFotografos()});
         }
@@ -739,25 +742,49 @@ public class VentanaPrincipal extends JFrame {
         if(tipo.startsWith("Modelo")) {
             Modelo m=agencia.buscarModeloPorCodigo(codigoId);
             if(m==null) { mostrarError("Modelo no encontrado: "+codigoId); return; }
-            boolean ok=evento.agregarModelo(m);
-            if(ok) mostrarExito("Modelo '"+m.getNombre()+"' asignado.");
-            else   mostrarError("El modelo ya estaba asignado.");
+            evento.agregarModeloParticipante(m);
+            mostrarExito("Modelo '"+m.getNombre()+"' asignado.");
         } else {
             Fotografo f=agencia.buscarFotografoPorId(codigoId);
             if(f==null) { mostrarError("Fotógrafo no encontrado: "+codigoId); return; }
-            boolean ok=evento.agregarFotografo(f);
-            if(ok) mostrarExito("Fotógrafo '"+f.getNombre()+"' asignado.");
-            else   mostrarError("El fotógrafo ya estaba asignado.");
+            evento.agregarFotografoAsignado(f);
+            mostrarExito("Fotógrafo '"+f.getNombre()+"' asignado.");
         }
-        actualizarEventos(); //Actualiza conteo en pestaña Eventos
+        actualizarEventos(); // Actualiza conteo en pestaña Eventos
         verDetalles();
     }
 
     private void verDetalles() {
-        StringBuilder sb=new StringBuilder();
-        if(agencia.getCantidadEventos()==0) sb.append("No hay eventos registrados.");
-        for(int i=0;i<agencia.getCantidadEventos();i++) {
-            sb.append(agencia.getEvento(i).mostrarDetalles()).append("\n");
+        if(agencia.getCantidadEventos()==0) {
+            areaAsignacion.setText("No hay eventos registrados.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for(int i=0; i<agencia.getCantidadEventos(); i++) {
+            Evento ev = agencia.getEvento(i);
+            sb.append("=== ").append(ev.tipoEvento().toUpperCase()).append(" ===\n");
+            sb.append("Nombre: ").append(ev.getNombreEvento()).append("\n");
+            sb.append("Fecha: ").append(ev.getFecha()).append("\n");
+            sb.append("Lugar: ").append(ev.getLugar()!=null ? ev.getLugar().getNombre() : "Sin asignar").append("\n");
+            if(ev instanceof EventoPublico) {
+                EventoPublico ep = (EventoPublico) ev;
+                sb.append("Capacidad: ").append(ep.getCapacidadAsistentes()).append("\n");
+                sb.append("Patrocinador: ").append(ep.getPatrocinador()).append("\n");
+            } else if(ev instanceof EventoPrivado) {
+                EventoPrivado epr = (EventoPrivado) ev;
+                sb.append("Cliente: ").append(epr.getCliente()).append("\n");
+                sb.append("Confidencialidad: ").append(epr.getNivelConfidencialidad()).append("\n");
+            }
+            sb.append("Modelos (").append(ev.getCantidadModelos()).append("): ");
+            Modelo[] ms = ev.getModelosParticipantes();
+            for(int j=0; j<ev.getCantidadModelos(); j++)
+                sb.append(ms[j].getNombre()).append(j<ev.getCantidadModelos()-1?", ":"");
+            sb.append("\n");
+            sb.append("Fotografos (").append(ev.getCantidadFotografos()).append("): ");
+            Fotografo[] fs = ev.getFotografosAsignados();
+            for(int j=0; j<ev.getCantidadFotografos(); j++)
+                sb.append(fs[j].getNombre()).append(j<ev.getCantidadFotografos()-1?", ":"");
+            sb.append("\n\n");
         }
         areaAsignacion.setText(sb.toString());
         areaAsignacion.setCaretPosition(0);
@@ -775,6 +802,7 @@ public class VentanaPrincipal extends JFrame {
     public static void main(String[] args) {
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext","true");
+        // Forzar renderizado de emojis en Windows sin perder el tema personalizado
         System.setProperty("java.awt.headless","false");
         SwingUtilities.invokeLater(VentanaPrincipal::new);
     }
