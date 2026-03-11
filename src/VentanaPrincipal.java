@@ -98,7 +98,7 @@ public class VentanaPrincipal extends JFrame {
         contenido.setOpaque(false);
         contenido.setBorder(BorderFactory.createEmptyBorder(45, 40, 30, 40));
 
-        // Intentamos cargar el logo real; si no existe usamos texto
+        // Intentamos cargar el logo real
         JLabel lblEmoji;
         ImageIcon iconoSplash = cargarLogo(180, 130);
         if (iconoSplash != null) {
